@@ -30,7 +30,7 @@ export default function Home() {
         setResponseMessage(""); // Clear previous message
 
         try {
-            const response = await fetch("http://localhost:5000/contactme", {
+            const response = await fetch("https://portfolio-pvps.onrender.com/contactme", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
