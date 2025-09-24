@@ -1,26 +1,103 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const App = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Sample initial bot message
+  useEffect(() => {
+    setMessages([
+      {
+        id: 1,
+        text: "Hi! I'm Saunak's AI assistant. You can ask me about his skills, projects, experience, or how to contact him!",
+        isBot: true,
+        timestamp: new Date()
+      }
+    ]);
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['home', 'skills', 'projects', 'experience', 'contact'];
-      const scrollPosition = window.scrollY + 100;
+    scrollToBottom();
+  }, [messages]);
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element && scrollPosition >= element.offsetTop && scrollPosition < element.offsetTop + element.offsetHeight) {
-          setActiveSection(section);
-          break;
-        }
-      }
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!inputMessage.trim()) return;
+
+    // Add user message
+    const userMessage = {
+      id: messages.length + 1,
+      text: inputMessage,
+      isBot: false,
+      timestamp: new Date()
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
+
+    // Simulate bot response (you'll replace this with actual API call)
+    setTimeout(() => {
+      const botResponse = getBotResponse(inputMessage);
+      setMessages(prev => [...prev, {
+        id: prev.length + 2,
+        text: botResponse,
+        isBot: true,
+        timestamp: new Date()
+      }]);
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const getBotResponse = (message) => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+      return "Hello! I'm here to help you learn more about Saunak. What would you like to know?";
+    }
+    
+    if (lowerMessage.includes('skill') || lowerMessage.includes('technology') || lowerMessage.includes('tech')) {
+      return "Saunak specializes in MERN stack development with expertise in React.js, Node.js, MongoDB, Express.js, JavaScript, Tailwind CSS, and more. He's also experienced with Python, Django, Socket.io, and various databases.";
+    }
+    
+    if (lowerMessage.includes('project') || lowerMessage.includes('work') || lowerMessage.includes('portfolio')) {
+      return "Saunak has built several impressive projects including DevSphere (developer social media), Vaishnav Vanik Samaj Website, and Krisha Fire & Security CRM. All projects use modern technologies and focus on solving real-world problems.";
+    }
+    
+    if (lowerMessage.includes('experience') || lowerMessage.includes('job') || lowerMessage.includes('work experience')) {
+      return "Saunak completed a MERN Stack Developer internship at TechnoGuide Infosoft Pvt. Ltd. He's currently pursuing MSc in IT while working on freelance projects. You can check the experience section for detailed information.";
+    }
+    
+    if (lowerMessage.includes('contact') || lowerMessage.includes('email') || lowerMessage.includes('phone') || lowerMessage.includes('hire')) {
+      return "You can contact Saunak at:\n📧 Email: saunakchaudhary0404@gmail.com\n📱 Phone: +91 7984297663\n📍 Location: Anand, Gujarat, India\nFeel free to reach out for collaborations or job opportunities!";
+    }
+    
+    if (lowerMessage.includes('education') || lowerMessage.includes('degree') || lowerMessage.includes('study')) {
+      return "Saunak is currently pursuing MSc in Information Technology (2024-2026) at Sardar Patel University with 8.24 CGPA. He completed BSc in Computer Application & IT (2021-2024) with 9.66 CGPA from NV Patel College, Anand.";
+    }
+    
+    return "I'm not sure I understand. You can ask me about Saunak's skills, projects, experience, education, or contact information. How can I help you?";
+  };
+
+  const handleQuickQuestion = (question) => {
+    setInputMessage(question);
+    // Auto-send after a brief delay
+    setTimeout(() => {
+      const fakeEvent = { preventDefault: () => {} };
+      handleSendMessage(fakeEvent);
+    }, 100);
+  };
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -35,8 +112,124 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+      {/* Chatbot Floating Button */}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-lg z-50 flex items-center justify-center hover:scale-110 transition-transform duration-300 border-2 border-white"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </button>
+
+      {/* Chatbot Modal */}
+      {isChatOpen && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-end p-4 md:items-center md:justify-center">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md h-96 md:h-[500px] flex flex-col border-2 border-black">
+            {/* Chat Header */}
+            <div className="bg-black text-white p-4 rounded-t-lg flex justify-between items-center">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-black font-bold text-sm">SC</span>
+                </div>
+                <div>
+                  <h3 className="font-bold">Saunak's Assistant</h3>
+                  <p className="text-xs text-gray-300">Online • Ask me anything</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsChatOpen(false)}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
+                >
+                  <div
+                    className={`max-w-xs md:max-w-md rounded-lg p-3 ${
+                      message.isBot
+                        ? 'bg-white border-2 border-gray-200 text-gray-800'
+                        : 'bg-black text-white'
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-line">{message.text}</p>
+                    <span className="text-xs opacity-70 block mt-1">
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-3">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Quick Questions */}
+            <div className="px-4 py-2 bg-white border-t border-gray-200">
+              <div className="flex overflow-x-auto space-x-2 pb-2">
+                {[
+                  "What are your skills?",
+                  "Tell me about your projects",
+                  "How can I contact you?",
+                  "What's your experience?"
+                ].map((question, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickQuestion(question)}
+                    className="flex-shrink-0 bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-200 transition-colors"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Input */}
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 bg-white">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="Ask me about Saunak..."
+                  className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-black transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={!inputMessage.trim()}
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white z-50 border-b-2 border-black transition-all duration-300">
+      <nav className="fixed top-0 w-full bg-white z-40 border-b-2 border-black transition-all duration-300">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="text-2xl font-black text-black tracking-tight">SAUNAK CHAUDHARY</div>
 
@@ -83,7 +276,7 @@ const App = () => {
         {isMenuOpen && (
           <div className="md:hidden bg-white p-4 border-t-2 border-black">
             <div className="flex flex-col space-y-3">
-              {['home', 'skills', 'projects', 'achievements', 'experience', 'contact'].map((item) => (
+              {['home', 'skills', 'projects', 'experience', 'contact'].map((item) => (
                 <button
                   key={item}
                   onClick={() => scrollToSection(item)}
@@ -254,7 +447,7 @@ const App = () => {
                 name: 'Python & Django',
                 icon: (
                   <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2 2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 ),
                 color: "text-blue-600",
@@ -317,6 +510,7 @@ const App = () => {
           </div>
         </div>
       </section>
+
       {/* Projects Section */}
       <section id="projects" className="py-20 px-4 relative">
         <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-gray-50 to-white"></div>
@@ -325,51 +519,91 @@ const App = () => {
             <h2 className="text-4xl md:text-5xl font-black text-black mb-4 tracking-tight">HERE'S A GLIMPSE OF SOME EXCITING PROJECTS I'VE DONE</h2>
             <div className="w-24 h-1 bg-black mx-auto"></div>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Project 1 */}
-            <div className="border-2 border-black bg-white hover:shadow-[10px_10px_0_0_#000] transition-all duration-500 transform hover:-translate-y-2 group overflow-hidden">
-              <div className="h-48 border-b-2 border-black relative overflow-hidden">
-                <div className="absolute top-4 right-4 bg-black text-white px-3 py-1 text-sm font-medium">2024</div>
+            <div className="border-2 border-black bg-white hover:shadow-[6px_6px_0_0_#000] transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden">
+              <div className="h-36 border-b-2 border-black relative overflow-hidden">
+                <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 text-xs font-medium">2024</div>
+                <img src="./prj2.png" alt="DevSphere Project" className="w-full h-full object-cover" />
               </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-black mb-2">DevSphere - Developer Social Media</h3>
-                <p className="text-gray-700 mb-4 leading-relaxed">
+              <div className="p-4">
+                <h3 className="text-lg font-bold text-black mb-2">DevSphere - Developer Social Media</h3>
+                <p className="text-gray-700 text-sm mb-3 leading-relaxed">
                   Built a social media platform tailored for developers to share projects, connect, and collaborate.
                 </p>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-3">
                   {['MERN Stack', 'Socket.io', 'Cloudinary'].map((tech, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 text-sm border border-gray-300 font-medium">
+                    <span key={index} className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs border border-gray-300 font-medium">
                       {tech}
                     </span>
                   ))}
                 </div>
-                <button className="text-black font-medium underline decoration-2 underline-offset-4 hover:no-underline group-hover:translate-x-2 transition-transform duration-300">
-                  View Project →
-                </button>
+                <div className="flex gap-2">
+                  <NavLink to="https://devsphere-97jl.onrender.com/" target='_blank' className="text-center flex-1 bg-black text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 transition-colors border border-black">
+                    Live Demo
+                  </NavLink>
+                  <NavLink to="https://github.com/SaunakChaudhary/devSphere" target='_blank' className=" text-center flex-1 bg-white text-black px-3 py-1.5 text-sm font-medium border border-black hover:bg-gray-100 transition-colors">
+                    Source Code
+                  </NavLink>
+                </div>
               </div>
             </div>
 
             {/* Project 2 */}
-            <div className="border-2 border-black bg-white hover:shadow-[10px_10px_0_0_#000] transition-all duration-500 transform hover:-translate-y-2 group overflow-hidden">
-              <div className="h-48  border-b-2 border-black relative overflow-hidden">
-                <div className="absolute top-4 right-4 bg-black text-white px-3 py-1 text-sm font-medium">2025</div>
+            <div className="border-2 border-black bg-white hover:shadow-[6px_6px_0_0_#000] transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden">
+              <div className="h-36 border-b-2 border-black relative overflow-hidden">
+                <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 text-xs font-medium">2025</div>
+                <img src="./prj1.png" alt="Vaishnav Vanik Samaj Project" className="w-full h-full object-cover" />
               </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-black mb-2">Vaishnav Vanik Samaj Website</h3>
-                <p className="text-gray-700 mb-4 leading-relaxed">
+              <div className="p-4">
+                <h3 className="text-lg font-bold text-black mb-2">Vaishnav Vanik Samaj Website</h3>
+                <p className="text-gray-700 text-sm mb-3 leading-relaxed">
                   Developed a complete website for a community organization managing 4000+ members.
                 </p>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-3">
                   {['MERN Stack', 'Responsive Design', 'Excel Integration'].map((tech, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 text-sm border border-gray-300 font-medium">
+                    <span key={index} className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs border border-gray-300 font-medium">
                       {tech}
                     </span>
                   ))}
                 </div>
-                <button className="text-black font-medium underline decoration-2 underline-offset-4 hover:no-underline group-hover:translate-x-2 transition-transform duration-300">
-                  View Project →
-                </button>
+                <div className="flex gap-2">
+                  <NavLink onClick={() => toast.error("Demo Not Available")} className="text-center flex-1 bg-black text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 transition-colors border border-black">
+                    Live Demo
+                  </NavLink>
+                  <NavLink target='_blank' to="https://github.com/saunakchaudhary/Vaishnav_vanik_samaj_project" className="flex-1 text-center bg-white text-black px-3 py-1.5 text-sm font-medium border border-black hover:bg-gray-100 transition-colors">
+                    Source Code
+                  </NavLink>
+                </div>
+              </div>
+            </div>
+
+            {/* Project 3 - New Project */}
+            <div className="border-2 border-black bg-white hover:shadow-[6px_6px_0_0_#000] transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden">
+              <div className="h-36 border-b-2 border-black relative overflow-hidden">
+                <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 text-xs font-medium">2025</div>
+                <img src="./prj3.png" alt="Krisha Fire & Security CRM Project" className="w-full h-full object-cover" />
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-bold text-black mb-2">Krisha Fire & Security CRM</h3>
+                <p className="text-gray-700 text-sm mb-3 leading-relaxed">
+                  Comprehensive CRM solution for fire & security company with user management, quotations, inventory, and mobile app.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {['MERN Stack', 'Tailwind CSS', 'REST APIs', 'JWT Auth', 'Socket.io'].map((tech, index) => (
+                    <span key={index} className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs border border-gray-300 font-medium">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <NavLink onClick={() => toast.error("Demo Not Available")} className="text-center flex-1 bg-black text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 transition-colors border border-black">
+                    Live Demo
+                  </NavLink>
+                  <NavLink target='_blank' to="https://github.com/SaunakChaudhary/Krisha-Fire-and-Securtiy-CRM" className="flex-1 text-center bg-white text-black px-3 py-1.5 text-sm font-medium border border-black hover:bg-gray-100 transition-colors">
+                    Source Code
+                  </NavLink>
+                </div>
               </div>
             </div>
           </div>
@@ -377,50 +611,189 @@ const App = () => {
       </section>
 
       {/* Experience Section */}
-      <section id="experience" className="py-20 px-4">
+      <section id="experience" className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-6xl">
-          <div className="border-2 border-black bg-white p-8 md:p-12 hover:shadow-[8px_8px_0_0_#000] transition-all duration-500">
-            <h2 className="text-3xl md:text-4xl font-black text-black mb-6 tracking-tight">Work Experience</h2>
 
-            <div className="mb-8 pb-8 border-b-2 border-gray-300">
-              <h3 className="text-2xl font-bold text-black">MERN Stack Developer (Intern)</h3>
-              <p className="text-lg text-gray-600 mb-4">TechnoGuide Infosoft Pvt. Ltd, Anand | May 2025 - July 2025</p>
-              <ul className="space-y-2">
-                {[
-                  "Designed and developed a responsive website for Vaishnav Vanik Samaj using the MERN stack",
-                  "Deployed the website to a cloud platform, ensuring high availability",
-                  "Implemented user authentication, event management, and dynamic content features",
-                  "Collaborated with stakeholders and delivered project milestones on schedule",
-                  "Optimized website performance and ensured mobile responsiveness"
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="text-black mr-2 mt-1">•</span>
-                    <span className="text-gray-700">{item}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-block border-2 border-black px-6 py-2 mb-4">
+              <span className="text-sm font-black uppercase tracking-widest">Career Journey</span>
             </div>
+            <h2 className="text-4xl md:text-5xl font-black text-black mb-3">EXPERIENCE & EDUCATION</h2>
+            <div className="w-20 h-0.5 bg-black mx-auto"></div>
+          </div>
 
-            <div>
-              <h3 className="text-xl font-bold text-black mb-4">Education</h3>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="w-3 h-3 bg-black mt-1 mr-3"></div>
-                  <div>
-                    <h4 className="font-semibold text-black">MSc. Information Technology</h4>
-                    <p className="text-gray-600">Sardar Patel University, Anand</p>
-                    <p className="text-gray-500">2024 - 2026 | 8.24 CGPA</p>
-                  </div>
+          {/* Main Content Grid */}
+          <div className="grid md:grid-cols-2 gap-8">
+
+            {/* Left Column - Experience */}
+            <div className="space-y-8">
+              {/* Experience Header */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-12 h-12 border-2 border-black bg-black text-white mb-3">
+                  <span className="text-2xl font-black">💼</span>
                 </div>
-                <div className="flex items-start">
-                  <div className="w-3 h-3 bg-black mt-1 mr-3"></div>
-                  <div>
-                    <h4 className="font-semibold text-black">BSc. Computer Application & IT</h4>
-                    <p className="text-gray-600">NV Patel College, Anand</p>
-                    <p className="text-gray-500">2021 - 2024 | 9.66 CGPA</p>
+                <h3 className="text-2xl font-black text-black uppercase">Work Experience</h3>
+              </div>
+
+              {/* Experience Card */}
+              <div className="border-2 border-black bg-white p-6 relative group hover:-translate-y-1 transition-transform duration-300">
+                {/* Corner Accents */}
+                <div className="absolute -top-1 -left-1 w-3 h-3 bg-black"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-black"></div>
+                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-black"></div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-black"></div>
+
+                <div className="flex justify-between items-start mb-4">
+                  <span className="bg-black text-white px-3 py-1 text-xs font-bold">INTERNSHIP</span>
+                  <span className="text-sm font-semibold text-gray-600">May 2025 - July 2025</span>
+                </div>
+
+                <h3 className="text-xl font-black text-black mb-2">MERN Stack Developer</h3>
+                <p className="text-gray-700 font-medium mb-4">TechnoGuide Infosoft Pvt. Ltd, Anand</p>
+
+                <ul className="space-y-3">
+                  {[
+                    "Designed and developed responsive website for Vaishnav Vanik Samaj using MERN stack",
+                    "Deployed website to cloud platform ensuring high availability",
+                    "Implemented user authentication, event management, and dynamic content features",
+                    "Collaborated with stakeholders and delivered project milestones on schedule",
+                    "Optimized website performance and ensured mobile responsiveness"
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-black mr-3 mt-1 font-bold">⟡</span>
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Tech Stack */}
+                <div className="mt-6 pt-4 border-t border-gray-300">
+                  <span className="text-xs font-bold text-gray-600 uppercase">Tech Stack:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {["React", "Node.js", "MongoDB", "Express", "JavaScript", "Tailwind CSS"].map((tech, index) => (
+                      <span key={index} className="bg-gray-100 border border-black px-2 py-1 text-xs font-bold">
+                        {tech}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
+
+              {/* Additional Experience Placeholder */}
+              <div className="border-2 border-dashed border-gray-400 bg-gray-50 p-6 text-center">
+                <div className="text-3xl mb-2">🚀</div>
+                <p className="text-gray-600 font-medium">More experiences coming soon!</p>
+              </div>
+            </div>
+
+            {/* Right Column - Education */}
+            <div className="space-y-8">
+              {/* Education Header */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-12 h-12 border-2 border-black bg-black text-white mb-3">
+                  <span className="text-2xl font-black">🎓</span>
+                </div>
+                <h3 className="text-2xl font-black text-black uppercase">Education</h3>
+              </div>
+
+              {/* Education Cards */}
+              <div className="space-y-6">
+                {/* MSc Card */}
+                <div className="border-2 border-black bg-white p-6 relative group hover:-translate-y-1 transition-transform duration-300">
+                  <div className="absolute -top-1 -left-1 w-3 h-3 bg-black"></div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-black"></div>
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-black"></div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-black"></div>
+
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="bg-gray-100 border border-black text-black px-3 py-1 text-xs font-bold">POSTGRADUATE</span>
+                    <span className="text-sm font-semibold text-gray-600">2024 - 2026</span>
+                  </div>
+
+                  <h3 className="text-xl font-black text-black mb-1">MSc. Information Technology</h3>
+                  <p className="text-gray-700 font-medium mb-3">Sardar Patel University, Anand</p>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="font-black text-2xl text-black">8.24</span>
+                      <span className="text-gray-600 ml-1">CGPA</span>
+                    </div>
+                    <span className="bg-yellow-500 text-black px-2 py-1 text-xs font-bold">In Progress</span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 border border-black">
+                    <div className="bg-black h-2" style={{ width: '50%' }}></div>
+                  </div>
+                </div>
+
+                {/* BSc Card */}
+                <div className="border-2 border-black bg-white p-6 relative group hover:-translate-y-1 transition-transform duration-300">
+                  <div className="absolute -top-1 -left-1 w-3 h-3 bg-black"></div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-black"></div>
+                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-black"></div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-black"></div>
+
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="bg-gray-100 border border-black text-black px-3 py-1 text-xs font-bold">UNDERGRADUATE</span>
+                    <span className="text-sm font-semibold text-gray-600">2021 - 2024</span>
+                  </div>
+
+                  <h3 className="text-xl font-black text-black mb-1">BSc. Computer Application & IT</h3>
+                  <p className="text-gray-700 font-medium mb-3">NV Patel College, Anand</p>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="font-black text-2xl text-black">9.66</span>
+                      <span className="text-gray-600 ml-1">CGPA</span>
+                    </div>
+                    <span className="bg-green-500 text-white px-2 py-1 text-xs font-bold">Completed</span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 border border-black">
+                    <div className="bg-green-500 h-2" style={{ width: '100%' }}></div>
+                  </div>
+                </div>
+
+                {/* Skills Summary */}
+                <div className="border-2 border-black bg-white p-6">
+                  <h4 className="text-lg font-black text-black mb-4 uppercase">Key Skills</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { skill: "MERN Stack", level: 85 },
+                      { skill: "JavaScript", level: 90 },
+                      { skill: "React.js", level: 88 },
+                      { skill: "Node.js", level: 82 },
+                      { skill: "MongoDB", level: 80 },
+                      { skill: "Tailwind CSS", level: 92 }
+                    ].map((item, index) => (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="font-bold">{item.skill}</span>
+                          <span className="text-gray-600">{item.level}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 border border-black">
+                          <div
+                            className="bg-black h-1"
+                            style={{ width: `${item.level}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Decoration */}
+          <div className="text-center mt-16">
+            <div className="inline-flex space-x-2">
+              <div className="w-1 h-1 bg-black"></div>
+              <div className="w-1 h-1 bg-black"></div>
+              <div className="w-1 h-1 bg-black"></div>
             </div>
           </div>
         </div>
