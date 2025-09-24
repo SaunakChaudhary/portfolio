@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 require("dotenv").config();
+const sendMail = require("./helper/sendMail");
 
 const app = express();
 app.use(cors());
@@ -98,6 +99,7 @@ const personalInfo = {
     - Preferred Projects: Full-stack apps, real-time platforms, educational tech, AI solutions
     `,
 };
+
 app.post("/ask", async (req, res) => {
   const { question } = req.body;
 
@@ -119,11 +121,54 @@ app.post("/ask", async (req, res) => {
     );
 
     const data = await response.json();
-    const answer = data?.candidates?.[0]?.content?.parts[0]?.text || "No answer found";
+    const answer =
+      data?.candidates?.[0]?.content?.parts[0]?.text || "No answer found";
     res.json({ answer });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+app.post("/contact", async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!email || !message || !name) {
+    return res.status(400).json({ error: "Please fill all fields" });
+  }
+
+  try {
+    const adminMail = await sendMail(
+      process.env.EMAIL_USER,
+      `📩 New Contact Form Submission from ${name}`,
+      message,
+      `<h3>New Contact Request</h3>
+       <p><b>Name:</b> ${name}</p>
+       <p><b>Email:</b> ${email}</p>
+       <p><b>Message:</b><br/> ${message}</p>`
+    );
+
+    if (!adminMail.success) {
+      return res.status(500).json({ error: "Failed to send to admin" });
+    }
+
+    const userMail = await sendMail(
+      email, 
+      "✅ Thank you for contacting us",
+      "Thank you for contacting us. We will get back to you soon.",
+      `<h3>Hello ${name},</h3>
+       <p>Thank you for contacting us. We received your message and will get back to you shortly.</p>
+       <br/><p>Best Regards,<br/>Saunak Portfolio</p>`
+    );
+
+    if (!userMail.success) {
+      return res.status(500).json({ error: "Failed to send to user" });
+    }
+
+    return res.status(200).json({ message: "Emails sent successfully!" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
 

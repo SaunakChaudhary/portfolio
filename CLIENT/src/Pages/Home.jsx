@@ -10,6 +10,81 @@ const App = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
+
+  // Handle input change
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const { name, email, message } = formData;
+    if (!name || !email || !message) {
+      setStatus("⚠️ All fields are required.");
+      return false;
+    }
+    // Simple email regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setStatus("⚠️ Please enter a valid email address.");
+      return false;
+    }
+    return true;
+  };
+
+  // Handle form submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("");
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://portfolio-pvps.onrender.com/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus("✅ Message sent successfully!");
+        setFormData({ name: "", email: "", message: "" }); // reset form
+      } else {
+        setStatus(`❌ ${data.error || "Something went wrong"}`);
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus("❌ Failed to send message. Try again later.");
+    }
+
+    setLoading(false);
+  };
+
+  // Download Resume Function
+  const downloadResume = () => {
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = '/resume.pdf';
+    link.download = 'Saunak_Chaudhary_Resume.pdf';
+    
+    // Append to body, click, and remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Optional: Show a success message
+    toast.success('Resume downloaded successfully!');
+  };
 
   // Sample initial bot message
   useEffect(() => {
@@ -48,7 +123,6 @@ const App = () => {
     setIsTyping(true);
 
     try {
-      // Call your backend API
       const response = await fetch("https://portfolio-pvps.onrender.com/ask", {
         method: "POST",
         headers: {
@@ -253,17 +327,29 @@ const App = () => {
             ))}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex items-center space-x-4">
+          {/* Desktop Resume Download Button */}
+          <div className="hidden md:flex items-center space-x-4">
             <button
-              className="bg-black text-white px-6 py-2 rounded-none border-2 border-black hover:bg-white hover:text-black transition-all duration-300 hidden md:block"
+              onClick={downloadResume}
+              className="bg-white text-black px-6 py-2 rounded-none border-2 border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center space-x-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Download Resume</span>
+            </button>
+            <button
+              className="bg-black text-white px-6 py-2 rounded-none border-2 border-black hover:bg-white hover:text-black transition-all duration-300"
               onClick={() => scrollToSection('contact')}
             >
               Let's Talk
             </button>
+          </div>
 
+          {/* Mobile Menu Button */}
+          <div className="flex items-center space-x-4 md:hidden">
             <button
-              className="md:hidden bg-black text-white p-2 rounded-none border-2 border-black"
+              className="bg-black text-white p-2 rounded-none border-2 border-black"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -290,7 +376,16 @@ const App = () => {
                 </button>
               ))}
               <button
-                className="bg-black text-white px-3 py-2 text-left mt-2"
+                className="bg-black text-white px-3 py-2 text-left flex items-center space-x-2"
+                onClick={downloadResume}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Download Resume</span>
+              </button>
+              <button
+                className="bg-white text-black px-3 py-2 text-left border-2 border-black mt-2"
                 onClick={() => scrollToSection('contact')}
               >
                 Let's Talk
@@ -333,10 +428,13 @@ const App = () => {
                     View My Work
                   </button>
                   <button
-                    onClick={() => scrollToSection('contact')}
-                    className="bg-white text-black px-8 py-3 rounded-none border-2 border-black hover:bg-black hover:text-white transition-all duration-300 font-medium transform hover:-translate-y-1 hover:shadow-[4px_4px_0_0_#000]"
+                    onClick={downloadResume}
+                    className="bg-white text-black px-8 py-3 rounded-none border-2 border-black hover:bg-black hover:text-white transition-all duration-300 font-medium transform hover:-translate-y-1 hover:shadow-[4px_4px_0_0_#000] flex items-center space-x-2"
                   >
-                    Get In Touch
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Download Resume</span>
                   </button>
                 </div>
               </div>
@@ -509,6 +607,23 @@ const App = () => {
               </div>
             ))}
           </div>
+
+          {/* Resume Download CTA */}
+          <div className="text-center mt-16">
+            <div className="bg-white border-2 border-black p-8 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-black text-black mb-4">Want to see more?</h3>
+              <p className="text-gray-700 mb-6">Download my complete resume to see my full experience, education, and skills in detail.</p>
+              <button
+                onClick={downloadResume}
+                className="bg-black text-white px-8 py-3 rounded-none border-2 border-black hover:bg-white hover:text-black transition-all duration-300 font-medium transform hover:-translate-y-1 hover:shadow-[4px_4px_0_0_#000] flex items-center space-x-2 mx-auto"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Download Full Resume (PDF)</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -605,6 +720,31 @@ const App = () => {
                     Source Code
                   </NavLink>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Resume Download Section */}
+          <div className="text-center mt-16">
+            <div className="bg-black text-white p-8 max-w-2xl mx-auto border-2 border-white">
+              <h3 className="text-2xl font-black mb-4">Ready to work together?</h3>
+              <p className="text-gray-300 mb-6">Download my resume to learn more about my qualifications and experience.</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={downloadResume}
+                  className="bg-white text-black px-6 py-3 rounded-none border-2 border-white hover:bg-black hover:text-white transition-all duration-300 font-medium flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Download Resume</span>
+                </button>
+                <button
+                  onClick={() => scrollToSection('contact')}
+                  className="bg-transparent text-white px-6 py-3 rounded-none border-2 border-white hover:bg-white hover:text-black transition-all duration-300 font-medium"
+                >
+                  Contact Me
+                </button>
               </div>
             </div>
           </div>
@@ -758,32 +898,20 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* Skills Summary */}
-                <div className="border-2 border-black bg-white p-6">
-                  <h4 className="text-lg font-black text-black mb-4 uppercase">Key Skills</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { skill: "MERN Stack", level: 85 },
-                      { skill: "JavaScript", level: 90 },
-                      { skill: "React.js", level: 88 },
-                      { skill: "Node.js", level: 82 },
-                      { skill: "MongoDB", level: 80 },
-                      { skill: "Tailwind CSS", level: 92 }
-                    ].map((item, index) => (
-                      <div key={index} className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="font-bold">{item.skill}</span>
-                          <span className="text-gray-600">{item.level}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 border border-black">
-                          <div
-                            className="bg-black h-1"
-                            style={{ width: `${item.level}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {/* Resume Download Card */}
+                <div className="border-2 border-black bg-white p-6 text-center hover:shadow-[4px_4px_0_0_#000] transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="text-4xl mb-3">📄</div>
+                  <h4 className="text-lg font-black text-black mb-2">Download Full Resume</h4>
+                  <p className="text-gray-700 text-sm mb-4">Get the complete details of my experience, education, and skills in PDF format.</p>
+                  <button
+                    onClick={downloadResume}
+                    className="bg-black text-white px-6 py-2 rounded-none border-2 border-black hover:bg-white hover:text-black transition-all duration-300 font-medium w-full flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Download Resume PDF</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -861,44 +989,72 @@ const App = () => {
                   </svg>
                 </a>
               </div>
+
+              {/* Resume Download in Contact Section */}
+              <div className="mt-8 pt-6 border-t border-gray-700">
+                <button
+                  onClick={downloadResume}
+                  className="bg-white text-black px-6 py-3 rounded-none border-2 border-white hover:bg-black hover:text-white transition-all duration-300 font-medium w-full flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Download Resume</span>
+                </button>
+              </div>
             </div>
 
             <div>
               <h3 className="text-2xl font-bold mb-6">Send Me a Message</h3>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
-                  <label htmlFor="name" className="block mb-1">Name</label>
+                  <label htmlFor="name" className="block mb-1">
+                    Name
+                  </label>
                   <input
                     type="text"
                     id="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     className="w-full p-3 bg-gray-900 text-white border-2 border-gray-700 rounded-none focus:outline-none focus:border-white transition-all duration-300"
                     placeholder="Your Name"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block mb-1">Email</label>
+                  <label htmlFor="email" className="block mb-1">
+                    Email
+                  </label>
                   <input
                     type="email"
                     id="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full p-3 bg-gray-900 text-white border-2 border-gray-700 rounded-none focus:outline-none focus:border-white transition-all duration-300"
                     placeholder="Your Email"
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="block mb-1">Message</label>
+                  <label htmlFor="message" className="block mb-1">
+                    Message
+                  </label>
                   <textarea
                     id="message"
                     rows="4"
+                    value={formData.message}
+                    onChange={handleChange}
                     className="w-full p-3 bg-gray-900 text-white border-2 border-gray-700 rounded-none focus:outline-none focus:border-white transition-all duration-300"
                     placeholder="Your Message"
                   ></textarea>
                 </div>
                 <button
                   type="submit"
-                  className="bg-white text-black px-8 py-3 rounded-none border-2 border-white hover:bg-black hover:text-white transition-all duration-300 font-medium transform hover:-translate-y-1"
+                  disabled={loading}
+                  className="bg-white text-black px-8 py-3 rounded-none border-2 border-white hover:bg-black hover:text-white transition-all duration-300 font-medium transform hover:-translate-y-1 disabled:opacity-50"
                 >
-                  Send Message
+                  {loading ? "Sending..." : "Send Message"}
                 </button>
+
+                {status && <p className="mt-2 text-sm">{status}</p>}
               </form>
             </div>
           </div>
