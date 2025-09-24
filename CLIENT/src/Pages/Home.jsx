@@ -31,13 +31,13 @@ const App = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
     // Add user message
     const userMessage = {
-      id: messages.length + 1,
+      id: Date.now(), // Better to use timestamp for unique IDs
       text: inputMessage,
       isBot: false,
       timestamp: new Date()
@@ -47,54 +47,56 @@ const App = () => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot response (you'll replace this with actual API call)
-    setTimeout(() => {
-      const botResponse = getBotResponse(inputMessage);
-      setMessages(prev => [...prev, {
-        id: prev.length + 2,
-        text: botResponse,
+    try {
+      // Call your backend API
+      const response = await fetch("http://localhost:5000/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question: inputMessage,
+          // You might want to include conversation history for context
+          conversation_history: messages.slice(-5) // Last 5 messages for context
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const botMessage = {
+        id: Date.now() + 1,
+        text: data.answer || data.response || "I'm not sure how to answer that. Please try asking something else.",
         isBot: true,
         timestamp: new Date()
-      }]);
-      setIsTyping(false);
-    }, 1000);
-  };
+      };
 
-  const getBotResponse = (message) => {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-      return "Hello! I'm here to help you learn more about Saunak. What would you like to know?";
+      setMessages(prev => [...prev, botMessage]);
+
+    } catch (error) {
+      console.error("Error fetching bot response:", error);
+
+      const errorMessage = {
+        id: Date.now() + 1,
+        text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+        isBot: true,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
     }
-    
-    if (lowerMessage.includes('skill') || lowerMessage.includes('technology') || lowerMessage.includes('tech')) {
-      return "Saunak specializes in MERN stack development with expertise in React.js, Node.js, MongoDB, Express.js, JavaScript, Tailwind CSS, and more. He's also experienced with Python, Django, Socket.io, and various databases.";
-    }
-    
-    if (lowerMessage.includes('project') || lowerMessage.includes('work') || lowerMessage.includes('portfolio')) {
-      return "Saunak has built several impressive projects including DevSphere (developer social media), Vaishnav Vanik Samaj Website, and Krisha Fire & Security CRM. All projects use modern technologies and focus on solving real-world problems.";
-    }
-    
-    if (lowerMessage.includes('experience') || lowerMessage.includes('job') || lowerMessage.includes('work experience')) {
-      return "Saunak completed a MERN Stack Developer internship at TechnoGuide Infosoft Pvt. Ltd. He's currently pursuing MSc in IT while working on freelance projects. You can check the experience section for detailed information.";
-    }
-    
-    if (lowerMessage.includes('contact') || lowerMessage.includes('email') || lowerMessage.includes('phone') || lowerMessage.includes('hire')) {
-      return "You can contact Saunak at:\n📧 Email: saunakchaudhary0404@gmail.com\n📱 Phone: +91 7984297663\n📍 Location: Anand, Gujarat, India\nFeel free to reach out for collaborations or job opportunities!";
-    }
-    
-    if (lowerMessage.includes('education') || lowerMessage.includes('degree') || lowerMessage.includes('study')) {
-      return "Saunak is currently pursuing MSc in Information Technology (2024-2026) at Sardar Patel University with 8.24 CGPA. He completed BSc in Computer Application & IT (2021-2024) with 9.66 CGPA from NV Patel College, Anand.";
-    }
-    
-    return "I'm not sure I understand. You can ask me about Saunak's skills, projects, experience, education, or contact information. How can I help you?";
   };
 
   const handleQuickQuestion = (question) => {
     setInputMessage(question);
     // Auto-send after a brief delay
     setTimeout(() => {
-      const fakeEvent = { preventDefault: () => {} };
+      const fakeEvent = { preventDefault: () => { } };
       handleSendMessage(fakeEvent);
     }, 100);
   };
@@ -155,11 +157,10 @@ const App = () => {
                   className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
                 >
                   <div
-                    className={`max-w-xs md:max-w-md rounded-lg p-3 ${
-                      message.isBot
-                        ? 'bg-white border-2 border-gray-200 text-gray-800'
-                        : 'bg-black text-white'
-                    }`}
+                    className={`max-w-xs md:max-w-md rounded-lg p-3 ${message.isBot
+                      ? 'bg-white border-2 border-gray-200 text-gray-800'
+                      : 'bg-black text-white'
+                      }`}
                   >
                     <p className="text-sm whitespace-pre-line">{message.text}</p>
                     <span className="text-xs opacity-70 block mt-1">
@@ -168,7 +169,7 @@ const App = () => {
                   </div>
                 </div>
               ))}
-              
+
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="bg-white border-2 border-gray-200 rounded-lg p-3">
