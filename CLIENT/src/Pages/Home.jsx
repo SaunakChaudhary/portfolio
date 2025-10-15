@@ -664,64 +664,6 @@ const App = () => {
                 </div>
               </div>
             </div>
-
-            {/* Project 2 */}
-            <div className="border-2 border-black bg-white hover:shadow-[6px_6px_0_0_#000] transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden">
-              <div className="h-36 border-b-2 border-black relative overflow-hidden">
-                <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 text-xs font-medium">2025</div>
-                <img src="./prj1.png" alt="Vaishnav Vanik Samaj Project" className="w-full h-full object-cover" />
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-bold text-black mb-2">Vaishnav Vanik Samaj Website</h3>
-                <p className="text-gray-700 text-sm mb-3 leading-relaxed">
-                  Developed a complete website for a community organization managing 4000+ members.
-                </p>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {['MERN Stack', 'Responsive Design', 'Excel Integration'].map((tech, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs border border-gray-300 font-medium">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <NavLink onClick={() => toast.error("Demo Not Available")} className="text-center flex-1 bg-black text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 transition-colors border border-black">
-                    Live Demo
-                  </NavLink>
-                  <NavLink target='_blank' to="https://github.com/saunakchaudhary/Vaishnav_vanik_samaj_project" className="flex-1 text-center bg-white text-black px-3 py-1.5 text-sm font-medium border border-black hover:bg-gray-100 transition-colors">
-                    Source Code
-                  </NavLink>
-                </div>
-              </div>
-            </div>
-
-            {/* Project 3 - New Project */}
-            <div className="border-2 border-black bg-white hover:shadow-[6px_6px_0_0_#000] transition-all duration-300 transform hover:-translate-y-1 group overflow-hidden">
-              <div className="h-36 border-b-2 border-black relative overflow-hidden">
-                <div className="absolute top-3 right-3 bg-black text-white px-2 py-1 text-xs font-medium">2025</div>
-                <img src="./prj3.png" alt="Krisha Fire & Security CRM Project" className="w-full h-full object-cover" />
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-bold text-black mb-2">Krisha Fire & Security CRM</h3>
-                <p className="text-gray-700 text-sm mb-3 leading-relaxed">
-                  Comprehensive CRM solution for fire & security company with user management, quotations, inventory, and mobile app.
-                </p>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {['MERN Stack', 'Tailwind CSS', 'REST APIs', 'JWT Auth', 'Socket.io'].map((tech, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs border border-gray-300 font-medium">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <NavLink onClick={() => toast.error("Demo Not Available")} className="text-center flex-1 bg-black text-white px-3 py-1.5 text-sm font-medium hover:bg-gray-800 transition-colors border border-black">
-                    Live Demo
-                  </NavLink>
-                  <NavLink target='_blank' to="https://github.com/SaunakChaudhary/Krisha-Fire-and-Securtiy-CRM" className="flex-1 text-center bg-white text-black px-3 py-1.5 text-sm font-medium border border-black hover:bg-gray-100 transition-colors">
-                    Source Code
-                  </NavLink>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Resume Download Section */}
